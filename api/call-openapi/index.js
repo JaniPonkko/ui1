@@ -3,9 +3,8 @@ const fetch = require('node-fetch');
 module.exports = async function (context, req) {
   const endpoint = "https://avcaihelper.openai.azure.com/openai/v1/";
   const deployment_name = "gpt-4.1";
-  //const apiKey = process.env.API_KEY;
-  const apiKey = 'sa1XSyVjJZBdXZDPnsPup6pJohghWrGPHEAnDImiG4AzSeDb5R6t';
-  const userQuery = req.body?.query;
+  const apiKey = process.env.API_KEY;
+    const userQuery = req.body?.query;
 
   if (!apiKey) {
     context.log("API_KEY puuttuu.");
