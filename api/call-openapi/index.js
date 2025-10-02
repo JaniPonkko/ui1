@@ -2,11 +2,10 @@ const fetch = require('node-fetch');
 
 module.exports = async function (context, req) {
   const apiKey = process.env.API_KEY;
-  const userQuery = req.body.query;
+  const userQuery = req.body?.query;
 
-  // Tarkistetaan että API-avain on asetettu
   if (!apiKey) {
-    context.log("API_KEY puuttuu ympäristömuuttujista.");
+    context.log("API_KEY puuttuu.");
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
@@ -15,9 +14,8 @@ module.exports = async function (context, req) {
     return;
   }
 
-  // Tarkistetaan että käyttäjän syöte on annettu
   if (!userQuery) {
-    context.log("Käyttäjän syöte puuttuu.");
+    context.log("query puuttuu.");
     context.res = {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -26,20 +24,22 @@ module.exports = async function (context, req) {
     return;
   }
 
-
   try {
-    const response = await fetch("https://avcaihelper.openai.azure.com/", {
+    const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/text-embedding-3-small/embeddings?api-version=2023-05-15", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
+        "api-key": apiKey
       },
-      body: JSON.stringify({ query: userQuery })
+      body: JSON.stringify({
+        messages: [{ role: "user", content: userQuery }],
+        max_tokens: 100,
+        temperature: 0.7
+      })
     });
 
-  const text = await response.text();
+    const text = await response.text();
 
-   // Yritetään jäsentää JSON
     let parsed;
     try {
       parsed = JSON.parse(text);
@@ -48,12 +48,14 @@ module.exports = async function (context, req) {
       context.res = {
         status: 502,
         headers: { "Content-Type": "application/json" },
-        body: { error: "Ulkoisen API:n vastaus ei ollut kelvollista JSONia.", raw: text }
+        body: {
+          error: "Ulkoisen API:n vastaus ei ollut kelvollista JSONia.",
+          raw: text
+        }
       };
       return;
     }
 
-    // Palautetaan onnistunut vastaus
     context.res = {
       status: response.status,
       headers: { "Content-Type": "application/json" },
@@ -64,7 +66,10 @@ module.exports = async function (context, req) {
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { error: "Virhe ulkoisen API:n kutsussa.", details: error.message }
+      body: {
+        error: "Virhe ulkoisen API:n kutsussa.",
+        details: error.message
+      }
     };
   }
 };
