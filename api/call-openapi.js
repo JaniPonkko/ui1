@@ -5,7 +5,7 @@ module.exports = async function (context, req) {
   const userQuery = req.body.query;
 
   try {
-    const response = await fetch("https://your-openapi-endpoint.com/api", {
+    const response = await fetch("https://avcaihelper.openai.azure.com/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
