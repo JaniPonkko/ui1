@@ -1,7 +1,10 @@
 const fetch = require('node-fetch');
 
 module.exports = async function (context, req) {
-  const apiKey = process.env.API_KEY;
+  const endpoint = "https://avcaihelper.openai.azure.com/openai/v1/";
+  const deployment_name = "gpt-4.1";
+  //const apiKey = process.env.API_KEY;
+  const apiKey = 'sa1XSyVjJZBdXZDPnsPup6pJohghWrGPHEAnDImiG4AzSeDb5R6t';
   const userQuery = req.body?.query;
 
   if (!apiKey) {
@@ -25,17 +28,18 @@ module.exports = async function (context, req) {
   }
 
   try {
-    const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/text-embedding-3-small/embeddings?api-version=2023-05-15", {
+    const response = await fetch("https://avcaihelper.openai.azure.com/openai/v1/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "api-key": apiKey
       },
       body: JSON.stringify({
-        //messages: [{ role: "user", content: userQuery }],
-        //max_tokens: 100,
-        //temperature: 0.7
-         input: userQuery
+        messages: [
+      { role: "developer", content: "You talk like a pirate." },
+      { role: "user", content: "Can you help me?" }
+    ],
+    model: deployment_name,
       })
     });
 
