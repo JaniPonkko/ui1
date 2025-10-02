@@ -4,6 +4,23 @@ module.exports = async function (context, req) {
   const apiKey = process.env.API_KEY;
   const userQuery = req.body.query;
 
+if (!apiKey) {
+    context.res = {
+      status: 500,
+      body: { error: "API_KEY is missing from environment." }
+    };
+    return;
+  }
+
+  if (!userQuery) {
+    context.res = {
+      status: 400,
+      body: { error: "Missing 'query' in request body." }
+    };
+    return;
+  }
+
+
   try {
     const response = await fetch("https://avcaihelper.openai.azure.com/", {
       method: "POST",
