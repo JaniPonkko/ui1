@@ -16,3 +16,4 @@ async function callAPI() {
   } catch (error) {
     output.textContent = "Error: " + error.message;
   }
+}
