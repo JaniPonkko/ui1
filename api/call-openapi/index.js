@@ -7,7 +7,7 @@ module.exports = async function (context, req) {
 if (!apiKey) {
     context.res = {
       status: 500,
-      body: { error: "API_KEY is missing from environment." }
+      body: { error: "API_KEY is missing from environment ." }
     };
     return;
   }
