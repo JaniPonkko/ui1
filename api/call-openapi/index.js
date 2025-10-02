@@ -32,9 +32,10 @@ module.exports = async function (context, req) {
         "api-key": apiKey
       },
       body: JSON.stringify({
-        messages: [{ role: "user", content: userQuery }],
-        max_tokens: 100,
-        temperature: 0.7
+        //messages: [{ role: "user", content: userQuery }],
+        //max_tokens: 100,
+        //temperature: 0.7
+         input: userQuery
       })
     });
 
