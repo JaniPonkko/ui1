@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OpenAPI Request Panel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>OpenAPI Request Panel</h1>
+    <div class="input-panel">
+      <label for="userInput">Enter your query:</label>
+      <input type="text" id="userInput" placeholder="Type something..." />
+      <button onclick="callAPI()">Send</button>
+    </div>
+    <div class="response-panel">
+      <h2>Response:</h2>
+      <pre id="responseOutput">Waiting for response...</pre>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
