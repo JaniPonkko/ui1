@@ -4,18 +4,24 @@ module.exports = async function (context, req) {
   const apiKey = process.env.API_KEY;
   const userQuery = req.body.query;
 
-if (!apiKey) {
+  // Tarkistetaan että API-avain on asetettu
+  if (!apiKey) {
+    context.log("API_KEY puuttuu ympäristömuuttujista.");
     context.res = {
       status: 500,
-      body: { error: "API_KEY is missing from environment ." }
+      headers: { "Content-Type": "application/json" },
+      body: { error: "API_KEY puuttuu palvelimen asetuksista." }
     };
     return;
   }
 
+  // Tarkistetaan että käyttäjän syöte on annettu
   if (!userQuery) {
+    context.log("Käyttäjän syöte puuttuu.");
     context.res = {
       status: 400,
-      body: { error: "Missing 'query' in request body." }
+      headers: { "Content-Type": "application/json" },
+      body: { error: "Pyynnöstä puuttuu 'query'-kenttä." }
     };
     return;
   }
@@ -31,15 +37,34 @@ if (!apiKey) {
       body: JSON.stringify({ query: userQuery })
     });
 
-    const data = await response.json();
+  const text = await response.text();
+
+   // Yritetään jäsentää JSON
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch (jsonError) {
+      context.log("Vastaus ei ollut kelvollista JSONia:", text);
+      context.res = {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+        body: { error: "Ulkoisen API:n vastaus ei ollut kelvollista JSONia.", raw: text }
+      };
+      return;
+    }
+
+    // Palautetaan onnistunut vastaus
     context.res = {
-      status: 200,
-      body: data
+      status: response.status,
+      headers: { "Content-Type": "application/json" },
+      body: parsed
     };
   } catch (error) {
+    context.log("Virhe API-kutsussa:", error.message);
     context.res = {
       status: 500,
-      body: { error: error.message }
+      headers: { "Content-Type": "application/json" },
+      body: { error: "Virhe ulkoisen API:n kutsussa.", details: error.message }
     };
   }
 };
