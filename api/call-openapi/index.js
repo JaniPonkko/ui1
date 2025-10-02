@@ -35,7 +35,7 @@ module.exports = async function (context, req) {
       body: JSON.stringify({
         messages: [
           { role: "system", content: "Olet avulias assistentti." },
-          { role: "user", content: userMessage }
+          { role: "user", content: userQuery }
     ],
         max_tokens: 200,
         temperature: 0.7
