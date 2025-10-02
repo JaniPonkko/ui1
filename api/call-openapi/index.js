@@ -1,7 +1,6 @@
 const fetch = require('node-fetch');
 
 module.exports = async function (context, req) {
-  const endpoint = "https://avcaihelper.openai.azure.com/openai/v1/";
   const deployment_name = "gpt-4.1";
   const apiKey = process.env.API_KEY;
     const userQuery = req.body?.query;
@@ -27,7 +26,7 @@ module.exports = async function (context, req) {
   }
 
   try {
-    const response = await fetch("https://avcaihelper.openai.azure.com/openai/v1/", {
+    const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -38,7 +37,12 @@ module.exports = async function (context, req) {
       { role: "developer", content: "You talk like a pirate." },
       { role: "user", content: "Can you help me?" }
     ],
-    model: deployment_name,
+    max_completion_tokens: 13107,
+      temperature: 1,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      model: modelName
       })
     });
 
