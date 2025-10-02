@@ -11,6 +11,12 @@ async function callAPI() {
       body: JSON.stringify({ query: input })
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      output.textContent = `Virhe: ${response.status} ${response.statusText}\n${errorText}`;
+      return;
+    }
+
     const data = await response.json();
     output.textContent = JSON.stringify(data, null, 2);
   } catch (error) {
