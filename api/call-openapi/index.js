@@ -37,12 +37,13 @@ module.exports = async function (context, req) {
       { role: "developer", content: "You talk like a pirate." },
       { role: "user", content: "Can you help me?" }
     ],
+    query: userQuery,
     max_completion_tokens: 13107,
       temperature: 1,
       top_p: 1,
       frequency_penalty: 0,
       presence_penalty: 0,
-      model: modelName
+      modelName: modelName
       })
     });
 
