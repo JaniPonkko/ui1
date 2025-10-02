@@ -2,7 +2,7 @@ async function callAPI() {
   const input = document.getElementById("userInput").value;
   const output = document.getElementById("responseOutput");
 
-  try {
+  try { 
     const response = await fetch("/api/call-openapi", {
       method: "POST",
       headers: {
