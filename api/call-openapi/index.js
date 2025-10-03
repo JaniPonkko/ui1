@@ -1,8 +1,18 @@
+
 const fetch = require('node-fetch');
+const { AzureOpenAI } = require("openai");
+
+const endpoint = "https://avcaihelper.openai.azure.com/";
+const embeddingModelName = "text-embedding-3-small";
+const embeddingApiVersion = "2024-04-01-preview";
+const embeddingDeployment = "text-embedding-3-small";
+const semaApiKey = process.env.SEMA_API_KEY;
+
 
 module.exports = async function (context, req) {
   const deployment_name = "gpt-4.1";
   const apiKey = process.env.API_KEY;
+  
     const userQuery = req.body?.query;
 
   if (!apiKey) {
@@ -26,6 +36,34 @@ module.exports = async function (context, req) {
   }
 
   try {
+    // 1. Get embedding for the user query using AzureOpenAI SDK
+    const options = {
+      endpoint,
+      semaApiKey,
+      deployment: embeddingDeployment,
+      apiVersion: embeddingApiVersion
+    };
+    const client = new AzureOpenAI(options);
+    const embeddingResponse = await client.embeddings.create({
+      input: [userQuery],
+      model: embeddingModelName
+    });
+    const embedding = embeddingResponse.data[0]?.embedding;
+
+    // 2. Use the embedding to query your external search service (pseudo-code)
+    // Replace this with your actual search service API call
+    // Example:
+    // const searchResults = await fetch('YOUR_SEARCH_SERVICE_ENDPOINT', { ... });
+    // const topDoc = searchResults[0];
+
+    // For now, just set topDoc to null (no context)
+    let topDoc = null;
+
+    // 3. Pass relevant context to GPT-4.1
+    const systemPrompt = topDoc
+      ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä tieto: "${topDoc.text}"`
+      : "Olet avulias assistentti.";
+
     const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
       method: "POST",
       headers: {
@@ -34,37 +72,18 @@ module.exports = async function (context, req) {
       },
       body: JSON.stringify({
         messages: [
-          { role: "system", content: "Olet avulias assistentti." },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userQuery }
-    ],
+        ],
         max_tokens: 200,
         temperature: 0.7
       })
     });
 
-    const text = await response.text();
-
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch (jsonError) {
-      context.log("Vastaus ei ollut kelvollista JSONia:", text);
-      context.res = {
-        status: 502,
-        headers: { "Content-Type": "application/json" },
-        body: {
-          error: "Ulkoisen API:n vastaus ei ollut kelvollista JSONia.",
-          raw: text
-        }
-      };
-      return;
-    }
-
     context.res = {
       status: response.status,
       headers: { "Content-Type": "application/json" },
-      //body: text.choices?.[0]?.message?.content || null,
-      body: parsed
+      body: await response.json()
     };
   } catch (error) {
     context.log("Virhe API-kutsussa:", error.message);
@@ -77,4 +96,4 @@ module.exports = async function (context, req) {
       }
     };
   }
-};
+}
