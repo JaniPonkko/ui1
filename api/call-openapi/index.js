@@ -27,11 +27,11 @@ module.exports = async function (context, req) {
   }
 
     if (!openaiApiKey) {
-    context.log("semaApiKey puuttuu.");
+    context.log("openaiApiKey puuttuu.");
     context.res = {
       status: 500,
       headers: { "Content-Type": "application/json" },
-      body: { error: "semaApiKey puuttuu palvelimen asetuksista." }
+      body: { error: "openaiApiKey puuttuu palvelimen asetuksista." }
     };
     return;
   }
@@ -51,7 +51,7 @@ module.exports = async function (context, req) {
     // 1. Get embedding for the user query using AzureOpenAI SDK
     const options = {
       endpoint,
-      semaApiKey: openaiApiKey,
+      openaiApiKey,
       deployment: embeddingDeployment,
       apiVersion: embeddingApiVersion
     };
