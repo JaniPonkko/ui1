@@ -25,6 +25,16 @@ module.exports = async function (context, req) {
     return;
   }
 
+    if (!semaApiKey) {
+    context.log("semaApiKey puuttuu.");
+    context.res = {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+      body: { error: "semaApiKey puuttuu palvelimen asetuksista." }
+    };
+    return;
+  }
+
   if (!userQuery) {
     context.log("query puuttuu.");
     context.res = {
