@@ -6,7 +6,8 @@ const endpoint = "https://avcaihelper.openai.azure.com/";
 const embeddingModelName = "text-embedding-3-small";
 const embeddingApiVersion = "2024-04-01-preview";
 const embeddingDeployment = "text-embedding-3-small";
-const semaApiKey = process.env.SEMA_API_KEY;
+//const openaiApiKey = process.env.SEMA_API_KEY;
+const openaiApiKey = process.env.AZURE_OPENAI_API_KEY;
 
 
 module.exports = async function (context, req) {
@@ -25,7 +26,7 @@ module.exports = async function (context, req) {
     return;
   }
 
-    if (!semaApiKey) {
+    if (!openaiApiKey) {
     context.log("semaApiKey puuttuu.");
     context.res = {
       status: 500,
@@ -50,7 +51,7 @@ module.exports = async function (context, req) {
     // 1. Get embedding for the user query using AzureOpenAI SDK
     const options = {
       endpoint,
-      semaApiKey,
+      semaApiKey: openaiApiKey,
       deployment: embeddingDeployment,
       apiVersion: embeddingApiVersion
     };
