@@ -63,8 +63,8 @@ module.exports = async function (context, req) {
     context.res = {
       status: response.status,
       headers: { "Content-Type": "application/json" },
-      body: parsed.choices?.[0]?.message?.content || null,
-      //body: parsed
+      //body: text.choices?.[0]?.message?.content || null,
+      body: parsed
     };
   } catch (error) {
     context.log("Virhe API-kutsussa:", error.message);

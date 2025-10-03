@@ -23,7 +23,8 @@ console.log('3');
 
     console.log('5');
     const data = await response.json();
-    output.textContent = JSON.stringify(data, null, 2);
+    output.textContent = data.choices?.[0]?.message?.content || null;
+    //output.textContent = JSON.stringify(data, null, 2);
   } catch (error) {
     console.log('6');
     output.textContent = "Error: " + error.message;
