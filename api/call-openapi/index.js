@@ -4,19 +4,27 @@ const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
 
-const endpoint = "https://avcaihelper.openai.azure.com/";
-const embeddingModelName = "text-embedding-3-small";
-const embeddingApiVersion = "2024-04-01-preview";
-const embeddingDeployment = "text-embedding-3-small";
-//const openaiApiKey = process.env.SEMA_API_KEY;
+
+// ENVIRONMENT VARIABLES (set these in your deployment)
+const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
+const embeddingModelName = process.env.AZURE_OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
+const embeddingApiVersion = process.env.AZURE_OPENAI_API_VERSION || "2024-04-01-preview";
+const embeddingDeployment = process.env.AZURE_OPENAI_EMBEDDING_DEPLOYMENT || "text-embedding-3-small";
 const openaiApiKey = process.env.AZURE_OPENAI_API_KEY;
+const apiKey = process.env.API_KEY;
+const azureStorageConnectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const azureBlobContainerName = process.env.AZURE_BLOB_CONTAINER_NAME;
+const azureSearchEndpoint = process.env.AZURE_SEARCH_ENDPOINT;
+const azureSearchIndex = process.env.AZURE_SEARCH_INDEX;
+const azureSearchApiKey = process.env.AZURE_SEARCH_API_KEY;
+const azureSearchEmbeddingField = process.env.AZURE_SEARCH_EMBEDDING_FIELD;
+const azureSearchBlobNameField = process.env.AZURE_SEARCH_BLOBNAME_FIELD || "blobName";
+
 
 
 module.exports = async function (context, req) {
   const deployment_name = "gpt-4.1";
-  const apiKey = process.env.API_KEY;
-  
-    const userQuery = req.body?.query;
+  const userQuery = req.body?.query;
 
   if (!apiKey) {
     context.log("API_KEY puuttuu.");
@@ -67,28 +75,48 @@ module.exports = async function (context, req) {
     context.log("STEP 1: Embedding extracted", Array.isArray(embedding), embedding ? embedding.length : null);
 
 
-    // 2. Use the embedding to query your external search service (pseudo-code)
-    context.log("STEP 2: (Pseudo) semantic search step");
-    // Replace this with your actual search service API call
-    // Example:
-    // const searchResults = await fetch('YOUR_SEARCH_SERVICE_ENDPOINT', { ... });
-    // const topDoc = searchResults[0];
 
-    // For now, just set topDoc to a mock object for demonstration
-    // In production, set topDoc.blobName to the blob name of the relevant document
+    // 2. Use the embedding to query Azure Cognitive Search
+    context.log("STEP 2: Azure Cognitive Search vector search");
     let topDoc = null;
-    // Example:
-    // let topDoc = { blobName: "mydoc.txt" };
-    context.log("STEP 2: Top doc", topDoc);
+    try {
+      const k = 1; // top 1 result
+      const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2023-07-01-Preview`;
+      const searchBody = {
+        vector: {
+          value: embedding,
+          fields: azureSearchEmbeddingField,
+          k: k
+        }
+      };
+      const searchRes = await fetch(searchUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": azureSearchApiKey
+        },
+        body: JSON.stringify(searchBody)
+      });
+      const searchJson = await searchRes.json();
+      if (searchJson.value && searchJson.value.length > 0) {
+        topDoc = searchJson.value[0];
+        context.log("STEP 2: Top doc from search", topDoc);
+      } else {
+        context.log("STEP 2: No relevant doc found in search");
+      }
+    } catch (searchErr) {
+      context.log("STEP 2: Azure Search error", searchErr.message);
+    }
 
     // 3. Fetch blob content if topDoc is found
     let docContent = null;
-    if (topDoc && topDoc.blobName) {
+    if (topDoc && topDoc[azureSearchBlobNameField]) {
       try {
-        context.log("STEP 3: Fetching blob content", topDoc.blobName);
-        const blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
-        const containerClient = blobServiceClient.getContainerClient(process.env.AZURE_BLOB_CONTAINER_NAME);
-        const blobClient = containerClient.getBlobClient(topDoc.blobName);
+        const blobName = topDoc[azureSearchBlobNameField];
+        context.log("STEP 3: Fetching blob content", blobName);
+        const blobServiceClient = BlobServiceClient.fromConnectionString(azureStorageConnectionString);
+        const containerClient = blobServiceClient.getContainerClient(azureBlobContainerName);
+        const blobClient = containerClient.getBlobClient(blobName);
         const downloadBlockBlobResponse = await blobClient.download();
         docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
         context.log("STEP 3: Blob content fetched, length:", docContent.length);
