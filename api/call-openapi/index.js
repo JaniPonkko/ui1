@@ -99,7 +99,7 @@ module.exports = async function (context, req) {
         search: userQuery, // or your own search string
         count: true,
         queryType: "semantic",  // tai semantic jos haluaa vain tekstihaun ilman vektorihakua
-        //semanticConfiguration: azureSearchSemanticConfig,
+        semanticConfiguration: azureSearchSemanticConfig,
         captions: "extractive",
         answers: "extractive|count-3",
       };
