@@ -17,7 +17,9 @@ const azureBlobContainerName = process.env.AZURE_BLOB_CONTAINER_NAME;
 const azureSearchEndpoint = process.env.AZURE_SEARCH_ENDPOINT;
 const azureSearchIndex = process.env.AZURE_SEARCH_INDEX;
 const azureSearchApiKey = process.env.AZURE_SEARCH_API_KEY;
-const azureSearchEmbeddingField = process.env.AZURE_SEARCH_EMBEDDING_FIELD;
+  const azureSearchEmbeddingField = (process.env.AZURE_SEARCH_EMBEDDING_FIELD || "embedding1,embedding2")
+      .split(",")
+      .map(f => f.trim());
 const azureSearchBlobNameField = process.env.AZURE_SEARCH_BLOBNAME_FIELD || "blobName";
 
 
@@ -80,13 +82,13 @@ module.exports = async function (context, req) {
     context.log("STEP 2: Azure Cognitive Search vector search");
     let topDoc = null;
 
-    context.log("url", `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-Preview`);
-    context.log("value", embedding);
-    context.log("fields", azureSearchEmbeddingField);
+    context.log("url: ", `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-preview`);
+    context.log("value: ", embedding);
+    context.log("fields: ", azureSearchEmbeddingField);
 
     try {
       const k = 1; // top 1 result
-      const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-Preview`;
+      const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-preview`;
       const searchBody = {
         vector: {
           value: embedding,
