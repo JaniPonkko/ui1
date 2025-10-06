@@ -87,14 +87,16 @@ module.exports = async function (context, req) {
     context.log("fields: ", azureSearchEmbeddingField);
 
     try {
-      const k = 1; // top 1 result
+      const k = 5; // top 1 result
       const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-preview`;
       const searchBody = {
         vector: {
           value: embedding,
           fields: azureSearchEmbeddingField,
           k: k
-        }
+        },
+        "top": 5,
+        "select": "id, content"
       };
       const searchRes = await fetch(searchUrl, {
         method: "POST",
