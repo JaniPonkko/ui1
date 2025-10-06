@@ -21,6 +21,7 @@ const azureSearchApiKey = process.env.AZURE_SEARCH_API_KEY;
       .split(",")
       .map(f => f.trim());
 const azureSearchBlobNameField = process.env.AZURE_SEARCH_BLOBNAME_FIELD || "blobName";
+const azureSearchSemanticConfig = process.env.AZURE_SEARCH_SEMANTIC_CONFIGURATION;
 
 
 
@@ -95,9 +96,15 @@ module.exports = async function (context, req) {
           fields: azureSearchEmbeddingField,
           k: k
         },
-        "top": 5,
-        "select": "id, content"
+        search: userQuery, // or your own search string
+        count: true,
+        queryType: "semantic",
+        semanticConfiguration: azureSearchSemanticConfig,
+        captions: "extractive",
+        answers: "extractive|count-3",
       };
+      
+
       const searchRes = await fetch(searchUrl, {
         method: "POST",
         headers: {
