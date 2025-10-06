@@ -79,9 +79,14 @@ module.exports = async function (context, req) {
     // 2. Use the embedding to query Azure Cognitive Search
     context.log("STEP 2: Azure Cognitive Search vector search");
     let topDoc = null;
+
+    context.log("url", `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-Preview`);
+    context.log("value", embedding);
+    context.log("fields", azureSearchEmbeddingField);
+
     try {
       const k = 1; // top 1 result
-      const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2023-07-01-Preview`;
+      const searchUrl = `${azureSearchEndpoint}/indexes/${azureSearchIndex}/docs/search?api-version=2025-08-01-Preview`;
       const searchBody = {
         vector: {
           value: embedding,
