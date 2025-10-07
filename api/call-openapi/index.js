@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
-const pdfParse = require("pdf-parse");
+const pdfTextExtract = require("pdf-text-extract");
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
@@ -212,8 +212,19 @@ async function readBlobAuto(downloadResponse) {
     // katsotaan sisältääkö pdf:n?
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
-      const pdfData = await pdfParse(buffer);
-      return pdfData.text; // palautetaan tekstiksi muokattu pdf
+
+extractTextFromPdfBuffer(buffer)
+  .then(text => {
+    return text;
+  })
+  .catch(err => {
+    console.error("Virhe PDF:n purussa:", err);
+    return ("Virhe PDF:n purussa:", err);
+  });
+
+
+      //const pdfData = await pdfTextExtract(buffer);
+      //return pdfData.text; // palautetaan tekstiksi muokattu pdf
     }
 
     console.log("Blob luettu bufferina");
@@ -242,6 +253,17 @@ async function streamToBufferi(readableStream) {
     readableStream.on("error", reject);
   });
 }
+
+async function extractTextFromPdfBuffer(pdfBuffer) {
+  return new Promise((resolve, reject) => {
+    extract(pdfBuffer, { splitPages: false }, (err, pages) => {
+      if (err) return reject(err);
+      const fullText = Array.isArray(pages) ? pages.join("\n") : pages;
+      resolve(fullText);
+    });
+  });
+}
+
 
 function isPdfBuffer(buffer) {
   const header = buffer.slice(0, 5).toString("utf-8");
