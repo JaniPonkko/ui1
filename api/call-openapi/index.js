@@ -192,7 +192,7 @@ async function streamToString(readableStream) {
   });
 }
 
-// 🔧 Pääfunktio: lue blob automaattisesti
+// Pääfunktio: lue blob automaattisesti
 async function readBlobAuto(downloadResponse) {
   
   const contentType = downloadResponse.contentType || "";
@@ -202,18 +202,18 @@ async function readBlobAuto(downloadResponse) {
   if (contentType.startsWith("text/") || contentType.includes("json") || contentType.includes("xml")) {
     // 📝 Tekstitiedosto
     const text = await streamToString(downloadResponse.readableStreamBody);
-    console.log("✅ Blob luettu tekstinä");
+    console.log("Blob luettu tekstinä");
     return text;
   } else {
     // 📦 Binääritiedosto
     const buffer = await streamToBuffer(downloadResponse.readableStreamBody);
-    console.log("✅ Blob luettu bufferina");
+    console.log("Blob luettu bufferina");
     return buffer;
   }
 }
 
 
-// 🔧 Apufunktio: stream → string
+// Apufunktio: stream → string
 async function streamToString(readableStream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
