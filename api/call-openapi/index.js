@@ -213,7 +213,7 @@ async function readBlobAuto(downloadResponse) {
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
       const pdfData = await extractTextFromPdfBuffer(buffer);
-      return pdfData.text; // palautetaan tekstiksi muokattu pdf
+      return pdfData; // palautetaan tekstiksi muokattu pdf
     }
 
     console.log("Blob luettu bufferina");
