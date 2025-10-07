@@ -200,12 +200,12 @@ async function readBlobAuto(downloadResponse) {
   console.log(`Blob contentType: ${contentType}`);
 
   if (contentType.startsWith("text/") || contentType.includes("json") || contentType.includes("xml")) {
-    // 📝 Tekstitiedosto
+    // Tekstitiedosto
     const text = await streamToString(downloadResponse.readableStreamBody);
     console.log("Blob luettu tekstinä");
     return text;
   } else {
-    // 📦 Binääritiedosto
+    // Binääritiedosto
     const buffer = await streamToBuffer(downloadResponse.readableStreamBody);
     console.log("Blob luettu bufferina");
     return buffer;
@@ -213,7 +213,7 @@ async function readBlobAuto(downloadResponse) {
 }
 
 
-// Apufunktio: stream → string
+// Apufunktio: stream to string
 async function streamToString(readableStream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -224,7 +224,7 @@ async function streamToString(readableStream) {
   });
 }
 
-// 🔧 Apufunktio: stream → buffer
+// Apufunktio: stream to buffer
 async function streamToBuffer(readableStream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
