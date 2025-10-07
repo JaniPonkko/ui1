@@ -129,20 +129,21 @@ module.exports = async function (context, req) {
 
     // 3. Fetch blob content if topDoc is found
     let docContent = null;
-    //if (topDoc && topDoc[azureSearchBlobNameField]) {
-    //  try {
-    //    const blobName = topDoc[azureSearchBlobNameField];
-    //    context.log("STEP 3: Fetching blob content", blobName);
-    //    const blobServiceClient = BlobServiceClient.fromConnectionString(azureStorageConnectionString);
-    //    const containerClient = blobServiceClient.getContainerClient(azureBlobContainerName);
-    //    const blobClient = containerClient.getBlobClient(blobName);
-    //    const downloadBlockBlobResponse = await blobClient.download();
-    //    docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
-    //    context.log("STEP 3: Blob content fetched, length:", docContent.length);
-    //  } catch (blobErr) {
-    //    context.log("STEP 3: Error fetching blob content", blobErr.message);
-    //  }
-    //}
+    if (topDoc && topDoc[azureSearchBlobNameField]) {
+      context.log("Löydetty topDoc: ",azureSearchBlobNameField);
+      try {
+        const blobName = topDoc[azureSearchBlobNameField];
+        context.log("STEP 3: Fetching blob content", blobName);
+        const blobServiceClient = BlobServiceClient.fromConnectionString(azureStorageConnectionString);
+        const containerClient = blobServiceClient.getContainerClient(azureBlobContainerName);
+        const blobClient = containerClient.getBlobClient(blobName);
+        const downloadBlockBlobResponse = await blobClient.download();
+        docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
+        context.log("STEP 3: Blob content fetched, length:", docContent.length);
+      } catch (blobErr) {
+        context.log("STEP 3: Error fetching blob content", blobErr.message);
+      }
+    }
 
     // 4. Pass relevant context to GPT-4.1
     const systemPrompt = docContent
