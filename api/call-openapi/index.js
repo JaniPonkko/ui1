@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
-const pdfTextExtract = require("pdf-text-extract");
+const extract = require("pdf-text-extract");
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
