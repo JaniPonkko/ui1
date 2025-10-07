@@ -118,6 +118,7 @@ module.exports = async function (context, req) {
       context.log("searchJson.value.length: ", searchJson.value.length);
       context.log("searchJson.value: ", searchJson.value);
       if (searchJson.value && searchJson.value.length > 0) {
+        context.log("montako topdocia löytyi: ",searchJson.value.length);
         topDoc = searchJson.value[0];
         context.log("STEP 2: Top doc from search", topDoc);
       } else {
