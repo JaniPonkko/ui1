@@ -130,7 +130,7 @@ module.exports = async function (context, req) {
     // 3. Fetch blob content if topDoc is found
     let docContent = null;
     if (topDoc && topDoc[azureSearchBlobNameField]) {
-      context.log("Löydetty topDoc: ",azureSearchBlobNameField);
+      context.log("Löydetty topDoc: ",topDoc[azureSearchBlobNameField]);
       try {
         const blobName = topDoc[azureSearchBlobNameField];
         context.log("STEP 3: Fetching blob content", blobName);
