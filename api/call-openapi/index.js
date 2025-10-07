@@ -147,8 +147,9 @@ module.exports = async function (context, req) {
     }
 
     // 4. Pass relevant context to GPT-4.1
+    docContent = docContent.length > 2000 ? docContent.slice(0, 2000) : docContent; // supistetaan saadun apudatan mittaa
     const systemPrompt = docContent
-      ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä tieto: "${docContent}"`
+      ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä taustatieto:\n\n${docContent}`
       : "Olet avulias assistentti.";
     context.log("STEP 4: System prompt", systemPrompt);
 
@@ -164,7 +165,8 @@ module.exports = async function (context, req) {
           { role: "user", content: userQuery }
         ],
         max_tokens: 400,
-        temperature: 0.7
+        temperature: 0.7,
+        stream: true
       })
     });
     context.log("STEP 5: GPT-4.1 response status", response.status);
