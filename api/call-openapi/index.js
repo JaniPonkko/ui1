@@ -3,6 +3,7 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
+const pdfParse = require("pdf-parse");
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
@@ -207,6 +208,14 @@ async function readBlobAuto(downloadResponse) {
   } else {
     // Binääritiedosto
     const buffer = await streamToBufferi(downloadResponse.readableStreamBody);
+
+    // katsotaan sisältääkö pdf:n?
+    if (isPdfBuffer(buffer)) {
+      console.log("Blob käsitelty pdf:nä");
+      const pdfData = await pdfParse(buffer);
+      return pdfData.text; // palautetaan tekstiksi muokattu pdf
+    }
+
     console.log("Blob luettu bufferina");
     return buffer;
   }
@@ -234,6 +243,10 @@ async function streamToBufferi(readableStream) {
   });
 }
 
+function isPdfBuffer(buffer) {
+  const header = buffer.slice(0, 5).toString("utf-8");
+  return header === "%PDF-";
+}
 
   } catch (error) {
     context.log("Virhe API-kutsussa:", error.message);
