@@ -4,7 +4,6 @@ const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
 
-
 // ENVIRONMENT VARIABLES (set these in your deployment)
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
 const embeddingModelName = process.env.AZURE_OPENAI_EMBEDDING_MODEL || "text-embedding-3-small";
@@ -139,7 +138,9 @@ module.exports = async function (context, req) {
         const containerClient = blobServiceClient.getContainerClient(azureBlobContainerName);
         const blobClient = containerClient.getBlobClient(blobName);
         const downloadBlockBlobResponse = await blobClient.download();
-        docContent = await readOpenAIStream(downloadBlockBlobResponse.readableStreamBody);
+        //docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
+        docContent = await readBlobAuto(downloadBlockBlobResponse);
+        
         context.log("STEP 3: Blob content fetched, length:", docContent.length);
       } catch (blobErr) {
         context.log("STEP 3: Error fetching blob content", blobErr.message);
@@ -191,38 +192,47 @@ async function streamToString(readableStream) {
   });
 }
 
+// 🔧 Pääfunktio: lue blob automaattisesti
+async function readBlobAuto(downloadResponse) {
+  
+  const contentType = downloadResponse.contentType || "";
 
-async function readOpenAIStream(readableStream) {
-  const reader = readableStream.getReader();
-  const decoder = new TextDecoder("utf-8");
-  let result = "";
+  console.log(`Blob contentType: ${contentType}`);
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    const chunk = decoder.decode(value, { stream: true });
-
-    // Jaa rivit ja käsittele vain 'stream'-rivit
-    for (const line of chunk.split("\n")) {
-      if (line.trim().startsWith("stream:")) {
-        const jsonPart = line.replace("stream:", "").trim();
-        try {
-          const parsed = JSON.parse(jsonPart);
-          if (parsed.content) result += parsed.content;
-        } catch (e) {
-          // ohita virheelliset osat
-        }
-      }
-      // Jos tulee "endstream", lopeta
-      if (line.trim() === "endstream") return result;
-    }
+  if (contentType.startsWith("text/") || contentType.includes("json") || contentType.includes("xml")) {
+    // 📝 Tekstitiedosto
+    const text = await streamToString(downloadResponse.readableStreamBody);
+    console.log("✅ Blob luettu tekstinä");
+    return text;
+  } else {
+    // 📦 Binääritiedosto
+    const buffer = await streamToBuffer(downloadResponse.readableStreamBody);
+    console.log("✅ Blob luettu bufferina");
+    return buffer;
   }
-
-  return result;
 }
 
 
+// 🔧 Apufunktio: stream → string
+async function streamToString(readableStream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readableStream.setEncoding("utf8");
+    readableStream.on("data", (chunk) => chunks.push(chunk));
+    readableStream.on("end", () => resolve(chunks.join("")));
+    readableStream.on("error", reject);
+  });
+}
+
+// 🔧 Apufunktio: stream → buffer
+async function streamToBuffer(readableStream) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    readableStream.on("data", (data) => chunks.push(data));
+    readableStream.on("end", () => resolve(Buffer.concat(chunks)));
+    readableStream.on("error", reject);
+  });
+}
 
 
   } catch (error) {
