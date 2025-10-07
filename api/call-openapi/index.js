@@ -152,7 +152,7 @@ module.exports = async function (context, req) {
       : "Olet avulias assistentti.";
     context.log("STEP 4: System prompt", systemPrompt);
 
-    const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
+    const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-04-14-preview", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
