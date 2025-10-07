@@ -139,7 +139,7 @@ module.exports = async function (context, req) {
         const containerClient = blobServiceClient.getContainerClient(azureBlobContainerName);
         const blobClient = containerClient.getBlobClient(blobName);
         const downloadBlockBlobResponse = await blobClient.download();
-        docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
+        docContent = await readOpenAIStream(downloadBlockBlobResponse.readableStreamBody);
         context.log("STEP 3: Blob content fetched, length:", docContent.length);
       } catch (blobErr) {
         context.log("STEP 3: Error fetching blob content", blobErr.message);
@@ -190,6 +190,41 @@ async function streamToString(readableStream) {
     readableStream.on('error', reject);
   });
 }
+
+
+async function readOpenAIStream(readableStream) {
+  const reader = readableStream.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let result = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+
+    // Jaa rivit ja käsittele vain 'stream'-rivit
+    for (const line of chunk.split("\n")) {
+      if (line.trim().startsWith("stream:")) {
+        const jsonPart = line.replace("stream:", "").trim();
+        try {
+          const parsed = JSON.parse(jsonPart);
+          if (parsed.content) result += parsed.content;
+        } catch (e) {
+          // ohita virheelliset osat
+        }
+      }
+      // Jos tulee "endstream", lopeta
+      if (line.trim() === "endstream") return result;
+    }
+  }
+
+  return result;
+}
+
+
+
+
   } catch (error) {
     context.log("Virhe API-kutsussa:", error.message);
     context.res = {
