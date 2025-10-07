@@ -166,7 +166,7 @@ module.exports = async function (context, req) {
         ],
         max_tokens: 400,
         temperature: 0.7,
-        stream: true
+        //stream: true
       })
     });
     context.log("STEP 5: GPT-4.1 response status", response.status);
