@@ -212,7 +212,7 @@ async function readBlobAuto(downloadResponse) {
     // katsotaan sisältääkö pdf:n?
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
-      const pdfData = await pdfParse(buffer);
+      const pdfData = await extractTextFromPdfBuffer(buffer);
       return pdfData.text; // palautetaan tekstiksi muokattu pdf
     }
 
@@ -241,6 +241,25 @@ async function streamToBufferi(readableStream) {
     readableStream.on("end", () => resolve(Buffer.concat(chunks)));
     readableStream.on("error", reject);
   });
+}
+
+
+// Funktio: pura PDF-teksti
+async function extractTextFromPdfBuffer(buffer) {
+  const uint8Array = new Uint8Array(buffer);
+  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
+  const pdfDocument = await loadingTask.promise;
+
+  let fullText = "";
+
+  for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
+    const page = await pdfDocument.getPage(pageNum);
+    const content = await page.getTextContent();
+    const strings = content.items.map((item) => item.str);
+    fullText += strings.join(" ") + "\n";
+  }
+
+  return fullText;
 }
 
 function isPdfBuffer(buffer) {
