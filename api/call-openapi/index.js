@@ -3,7 +3,10 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
-const pdfjsLib = require("pdfjs-dist/legacy/build/pdf.js");
+
+const pdfjsLib = require("pdfjs-dist");
+pdfjsLib.GlobalWorkerOptions.workerSrc = require("pdfjs-dist/build/pdf.worker.entry");
+
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
 const endpoint = process.env.AZURE_OPENAI_ENDPOINT || "https://avcaihelper.openai.azure.com/";
@@ -280,3 +283,4 @@ function isPdfBuffer(buffer) {
     };
   }
 }
+
