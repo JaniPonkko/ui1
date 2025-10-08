@@ -142,8 +142,6 @@ module.exports = async function (context, req) {
         //docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
         docContent = await readBlobAuto(downloadBlockBlobResponse);
 
-
-
         
         context.log("STEP 3: Blob content fetched, length:", docContent.length);
       } catch (blobErr) {
@@ -182,19 +180,7 @@ module.exports = async function (context, req) {
       body: await response.json()
     };
     context.log("STEP 6: Response sent to client");
-// Helper function to convert stream to string
-async function streamToString(readableStream) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    readableStream.on('data', (data) => {
-      chunks.push(data.toString());
-    });
-    readableStream.on('end', () => {
-      resolve(chunks.join(''));
-    });
-    readableStream.on('error', reject);
-  });
-}
+
 
 // Pääfunktio: lue blob automaattisesti
 async function readBlobAuto(downloadResponse) {
@@ -215,10 +201,8 @@ async function readBlobAuto(downloadResponse) {
     // katsotaan sisältääkö pdf:n?
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
-      //const pdfData = await extractTextFromPdfBuffer(buffer);
-      //return pdfData; // palautetaan tekstiksi muokattu pdf
       const bufferi = await downloadBlockBlobResponse.arrayBuffer(); // tai .body, riippuen muodosta
-      const docContent = await extractTextFromPDF(bufferi);
+      const docContent = await extractTextFromPdfBuffer(bufferi);
       return docContent;
     }
 
