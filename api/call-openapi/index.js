@@ -141,6 +141,9 @@ module.exports = async function (context, req) {
         const downloadBlockBlobResponse = await blobClient.download();
         //docContent = await streamToString(downloadBlockBlobResponse.readableStreamBody);
         docContent = await readBlobAuto(downloadBlockBlobResponse);
+
+
+
         
         context.log("STEP 3: Blob content fetched, length:", docContent.length);
       } catch (blobErr) {
@@ -212,8 +215,11 @@ async function readBlobAuto(downloadResponse) {
     // katsotaan sisältääkö pdf:n?
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
-      const pdfData = await extractTextFromPdfBuffer(buffer);
-      return pdfData; // palautetaan tekstiksi muokattu pdf
+      //const pdfData = await extractTextFromPdfBuffer(buffer);
+      //return pdfData; // palautetaan tekstiksi muokattu pdf
+      const bufferi = await downloadBlockBlobResponse.arrayBuffer(); // tai .body, riippuen muodosta
+      const docContent = await extractTextFromPDF(bufferi);
+      return docContent;
     }
 
     console.log("Blob luettu bufferina");
@@ -246,20 +252,23 @@ async function streamToBufferi(readableStream) {
 
 // Funktio: pura PDF-teksti
 async function extractTextFromPdfBuffer(buffer) {
-  const uint8Array = new Uint8Array(buffer);
-  const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-  const pdfDocument = await loadingTask.promise;
+
+  const data = new Uint8Array(buffer);
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
 
   let fullText = "";
 
-  for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-    const page = await pdfDocument.getPage(pageNum);
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
     const content = await page.getTextContent();
-    const strings = content.items.map((item) => item.str);
-    fullText += strings.join(" ") + "\n";
+
+    const pageText = content.items.map(item => item.str).join(" ");
+    fullText += `\n\n--- Page ${pageNum} ---\n\n${pageText}`;
   }
 
   return fullText;
+
 }
 
 function isPdfBuffer(buffer) {
