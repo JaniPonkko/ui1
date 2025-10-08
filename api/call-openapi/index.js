@@ -174,10 +174,17 @@ module.exports = async function (context, req) {
     });
     context.log("STEP 5: GPT-4.1 response status", response.status);
 
+    try {
+      responseBody = await response.json();
+    } catch (jsonErr) {
+      context.log("JSON parsing error:", jsonErr.message);
+      responseBody = { error: "Invalid JSON response from GPT." };
+    }
+
     context.res = {
       status: response.status,
       headers: { "Content-Type": "application/json" },
-      body: await response.json()
+      body: responseBody
     };
     context.log("STEP 6: Response sent to client");
 
@@ -201,8 +208,9 @@ async function readBlobAuto(downloadResponse) {
     // katsotaan sisältääkö pdf:n?
     if (isPdfBuffer(buffer)) {
       console.log("Blob käsitelty pdf:nä");
-      const bufferi = await downloadBlockBlobResponse.arrayBuffer(); // tai .body, riippuen muodosta
-      const docContent = await extractTextFromPdfBuffer(bufferi);
+      //const bufferi = await downloadBlockBlobResponse.arrayBuffer(); // tai .body, riippuen muodosta
+      //const docContent = await extractTextFromPdfBuffer(bufferi);
+      const docContent = await extractTextFromPdfBuffer(buffer);
       return docContent;
     }
 
