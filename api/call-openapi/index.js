@@ -160,6 +160,9 @@ module.exports = async function (context, req) {
       context.log("STEP 3.5: Summarizing document content with GPT");
 
       // Jos sisältö on JSON, muunna se luettavaksi tekstiksi
+      
+
+
       if (isJson(docContent)) {
         context.log("STEP 3.5: Document is JSON, converting to readable text");
         try {
@@ -169,8 +172,15 @@ module.exports = async function (context, req) {
         } catch (jsonErr) {
           context.log("STEP 3.5: JSON parsing failed", jsonErr.message);
         }
-      }
 
+                // Jos sisältö on rakenteellista, muunna se luettavaksi tekstiksi
+          if (isStructuredFormat(docContent)) {
+            context.log("STEP 3.6: Document is structured, converting to readable text");
+            docContent = parseStructuredDataToText(docContent);
+            context.log("STEP 3.6: Structured content converted, length:", docContent.length);
+          }
+      }
+      
       const summarizationPrompt = `Tiivistä seuraava dokumentti siten, että säilyvät kaikki kysymykseen "${userQuery}" liittyvät faktat ja asiayhteydet. Poista epäolennainen sisältö.\n\n${docContent}`;
 
       const summarizationResponse = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
@@ -348,6 +358,46 @@ function jsonToReadableText(jsonObj, indent = 0) {
   return output;
 }
 
+function isStructuredFormat(text) {
+  return text.includes("- id:") && text.includes("- aihe:");
+}
+
+function parseStructuredDataToText(rawText) {
+  const lines = rawText.split("\n");
+  const entries = [];
+  let currentEntry = [];
+
+  for (const line of lines) {
+    if (line.trim().startsWith("- 0:") || line.trim().match(/^-\s*\d+:/)) {
+      if (currentEntry.length > 0) {
+        entries.push(currentEntry);
+        currentEntry = [];
+      }
+    }
+    currentEntry.push(line);
+  }
+
+  if (currentEntry.length > 0) {
+    entries.push(currentEntry);
+  }
+
+  const parsedEntries = entries.map((entryLines, index) => {
+    const entryText = [];
+    for (const line of entryLines) {
+      const match = line.match(/-\s*(\w+):\s*(.*)/);
+      if (match) {
+        const key = match[1];
+        const value = match[2].trim();
+        if (value) {
+          entryText.push(`${key}: ${value}`);
+        }
+      }
+    }
+    return `Merkintä ${index + 1}:\n${entryText.join("\n")}`;
+  });
+
+  return parsedEntries.join("\n\n");
+}
 
 
 
