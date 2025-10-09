@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
-const pdfjsLib = require("pdfjs-dist");
+const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
 
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
