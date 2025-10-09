@@ -151,7 +151,7 @@ module.exports = async function (context, req) {
     }
 
     // 4. Pass relevant context to GPT-4.1
-    //docContent = docContent.length > 2000 ? docContent.slice(0, 2000) : docContent; // supistetaan saadun apudatan mittaa
+    docContent = docContent.length > 20000 ? docContent.slice(0, 20000) : docContent; // supistetaan saadun apudatan mittaa
     const systemPrompt = docContent
       ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä taustatieto:\n\n${docContent}`
       : "Olet avulias assistentti.";
