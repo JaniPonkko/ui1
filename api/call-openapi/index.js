@@ -150,12 +150,56 @@ module.exports = async function (context, req) {
       }
     }
 
+
+
+
+
+
     // 4. Pass relevant context to GPT-4.1
-    docContent = docContent.length > 20000 ? docContent.slice(0, 20000) : docContent; // supistetaan saadun apudatan mittaa
-    const systemPrompt = docContent
-      ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä taustatieto:\n\n${docContent}`
-      : "Olet avulias assistentti.";
-    context.log("STEP 4: System prompt", systemPrompt);
+    //docContent = docContent.length > 20000 ? docContent.slice(0, 20000) : docContent; // supistetaan saadun apudatan mittaa
+
+let summarizedDocContent = docContent;
+if (docContent && docContent.length > 1000) {
+  context.log("STEP 3.5: Summarizing document content with GPT");
+
+  const summarizationPrompt = `Tiivistä seuraava dokumentti siten, että säilyvät kaikki kysymykseen "${userQuery}" liittyvät faktat ja asiayhteydet. Poista epäolennainen sisältö.\n\n${docContent}`;
+
+  const summarizationResponse = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "api-key": apiKey
+    },
+    body: JSON.stringify({
+      messages: [
+        { role: "system", content: "Olet asiantunteva tiivistäjä." },
+        { role: "user", content: summarizationPrompt }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3
+    })
+  });
+
+  const summarizationJson = await summarizationResponse.json();
+  summarizedDocContent = summarizationJson.choices?.[0]?.message?.content?.trim() || docContent;
+  context.log("STEP 3.5: Summarized content length:", summarizedDocContent.length);
+}
+
+
+
+
+
+
+
+const systemPrompt = summarizedDocContent
+  ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä tiivistetty taustatieto:\n\n${summarizedDocContent}`
+  : "Olet avulias assistentti.";
+
+   // const systemPrompt = docContent
+   //   ? `Olet avulias assistentti. Tässä on käyttäjän kysymykseen liittyvä taustatieto:\n\n${docContent}`
+   //   : "Olet avulias assistentti.";
+   
+   context.log("STEP 4: System prompt", systemPrompt);
 
     const response = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
       method: "POST",
