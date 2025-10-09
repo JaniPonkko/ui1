@@ -27,3 +27,11 @@ button {
   padding: 10px 15px;
   cursor: pointer;
 }
+
+#responseOutput {
+  white-space: pre-wrap;         /* säilyttää rivinvaihdot ja rivittää automaattisesti */
+  word-wrap: break-word;         /* katkaisee pitkät sanat tarvittaessa */
+  overflow-wrap: break-word;     /* varmistaa rivityksen kaikissa selaimissa */
+  max-width: 100%;               /* ei ylitä laatikon leveyttä */
+  box-sizing: border-box;
+}
