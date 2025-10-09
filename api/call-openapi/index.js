@@ -3,7 +3,7 @@
 const fetch = require('node-fetch');
 const { AzureOpenAI } = require("openai");
 const { BlobServiceClient } = require('@azure/storage-blob');
-const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
+//const pdfjsLib = await import('pdfjs-dist/build/pdf.mjs');
 
 
 // ENVIRONMENT VARIABLES (set these in your deployment)
@@ -211,7 +211,7 @@ async function readBlobAuto(downloadResponse) {
       console.log("Blob käsitelty pdf:nä");
       //const bufferi = await downloadBlockBlobResponse.arrayBuffer(); // tai .body, riippuen muodosta
       //const docContent = await extractTextFromPdfBuffer(bufferi);
-      const docContent = await extractTextFromPdfBuffer(buffer);
+      //const docContent = await extractTextFromPdfBuffer(buffer);
       return docContent;
     }
 
@@ -244,25 +244,25 @@ async function streamToBufferi(readableStream) {
 
 
 // Funktio: pura PDF-teksti
-async function extractTextFromPdfBuffer(buffer) {
+//async function extractTextFromPdfBuffer(buffer) {
+//
+//  const data = new Uint8Array(buffer);
+//  const pdf = await pdfjsLib.getDocument({ data }).promise;
 
-  const data = new Uint8Array(buffer);
-  const pdf = await pdfjsLib.getDocument({ data }).promise;
-
-  let fullText = "";
+//  let fullText = "";
 
 
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const content = await page.getTextContent();
+//  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+//    const page = await pdf.getPage(pageNum);
+//    const content = await page.getTextContent();
 
-    const pageText = content.items.map(item => item.str).join(" ");
-    fullText += `\n\n--- Page ${pageNum} ---\n\n${pageText}`;
-  }
+//    const pageText = content.items.map(item => item.str).join(" ");
+//    fullText += `\n\n--- Page ${pageNum} ---\n\n${pageText}`;
+//  }
 
-  return fullText;
+//  return fullText;
 
-}
+//}
 
 function isPdfBuffer(buffer) {
   const header = buffer.slice(0, 5).toString("utf-8");
