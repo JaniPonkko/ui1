@@ -154,36 +154,46 @@ module.exports = async function (context, req) {
 
 
 
+    // 3.5 Tiivistä dokumentin sisältö GPT:llä
+    let summarizedDocContent = docContent;
+    if (docContent && docContent.length > 1000) {
+      context.log("STEP 3.5: Summarizing document content with GPT");
 
-    // 4. Pass relevant context to GPT-4.1
-    //docContent = docContent.length > 20000 ? docContent.slice(0, 20000) : docContent; // supistetaan saadun apudatan mittaa
+      // Jos sisältö on JSON, muunna se luettavaksi tekstiksi
+      if (isJson(docContent)) {
+        context.log("STEP 3.5: Document is JSON, converting to readable text");
+        try {
+          const parsedJson = JSON.parse(docContent);
+          docContent = jsonToReadableText(parsedJson);
+          context.log("STEP 3.5: JSON converted to text, length:", docContent.length);
+        } catch (jsonErr) {
+          context.log("STEP 3.5: JSON parsing failed", jsonErr.message);
+        }
+      }
 
-let summarizedDocContent = docContent;
-if (docContent && docContent.length > 1000) {
-  context.log("STEP 3.5: Summarizing document content with GPT");
+      const summarizationPrompt = `Tiivistä seuraava dokumentti siten, että säilyvät kaikki kysymykseen "${userQuery}" liittyvät faktat ja asiayhteydet. Poista epäolennainen sisältö.\n\n${docContent}`;
 
-  const summarizationPrompt = `Tiivistä seuraava dokumentti siten, että säilyvät kaikki kysymykseen "${userQuery}" liittyvät faktat ja asiayhteydet. Poista epäolennainen sisältö.\n\n${docContent}`;
+      const summarizationResponse = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": apiKey
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: "system", content: "Olet asiantunteva tiivistäjä." },
+            { role: "user", content: summarizationPrompt }
+          ],
+          max_tokens: 1000,
+          temperature: 0.3
+        })
+      });
 
-  const summarizationResponse = await fetch("https://avcaihelper.openai.azure.com/openai/deployments/gpt-4.1/chat/completions?api-version=2025-01-01-preview", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "api-key": apiKey
-    },
-    body: JSON.stringify({
-      messages: [
-        { role: "system", content: "Olet asiantunteva tiivistäjä." },
-        { role: "user", content: summarizationPrompt }
-      ],
-      max_tokens: 1000,
-      temperature: 0.3
-    })
-  });
+      const summarizationJson = await summarizationResponse.json();
+      summarizedDocContent = summarizationJson.choices?.[0]?.message?.content?.trim() || docContent;
+      context.log("STEP 3.5: Summarized content length:", summarizedDocContent.length);
+    }
 
-  const summarizationJson = await summarizationResponse.json();
-  summarizedDocContent = summarizationJson.choices?.[0]?.message?.content?.trim() || docContent;
-  context.log("STEP 3.5: Summarized content length:", summarizedDocContent.length);
-}
 
 
 
@@ -312,6 +322,34 @@ function isPdfBuffer(buffer) {
   const header = buffer.slice(0, 5).toString("utf-8");
   return header === "%PDF-";
 }
+
+
+function isJson(str) {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function jsonToReadableText(jsonObj, indent = 0) {
+  let output = "";
+  const pad = " ".repeat(indent);
+
+  for (const [key, value] of Object.entries(jsonObj)) {
+    if (typeof value === "object" && value !== null) {
+      output += `${pad}- ${key}:\n${jsonToReadableText(value, indent + 2)}\n`;
+    } else {
+      output += `${pad}- ${key}: ${value}\n`;
+    }
+  }
+
+  return output;
+}
+
+
+
 
   } catch (error) {
     context.log("Virhe API-kutsussa:", error.message);
